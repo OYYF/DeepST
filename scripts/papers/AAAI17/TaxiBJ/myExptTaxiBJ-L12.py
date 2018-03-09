@@ -197,6 +197,8 @@ def build_model(external_dim):
     print(p_conf)
     print (type(t_conf))
     print(t_conf)
+    print('external_dim: ', external_dim)
+    print('nb_residual_unit: ', nb_residual_unit)
     model = stresnet(c_conf=c_conf, p_conf=p_conf, t_conf=t_conf,
                      external_dim=external_dim, nb_residual_unit=nb_residual_unit)
     adam = Adam(lr=lr)

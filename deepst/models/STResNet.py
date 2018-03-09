@@ -85,7 +85,7 @@ def stresnet(c_conf=(3, 2, 32, 32), p_conf=(3, 2, 32, 32), t_conf=(3, 2, 32, 32)
         for output in outputs:
             new_outputs.append(iLayer()(output))
         for ii in range(len(new_outputs)):
-            print (new_outputs[ii].shape)
+            print ('new_outputs[ii].shape', new_outputs[ii].shape)
         main_output = merge(new_outputs, mode='sum')
 
     # fusing with external component
