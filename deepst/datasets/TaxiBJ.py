@@ -146,7 +146,8 @@ def load_data(T=48, nb_flow=2, len_closeness=None, len_period=None, len_trend=No
     meta_feature = np.hstack(meta_feature) if len(
         meta_feature) > 0 else np.asarray(meta_feature)
     metadata_dim = meta_feature.shape[1] if len(
-        meta_feature.shape) > 1 else None
+        meta_feature.shape) > 1 else 0
+    print (type(metadata_dim), metadata_dim)
     if metadata_dim < 1:
         metadata_dim = None
     if meta_data and holiday_data and meteorol_data:
@@ -189,4 +190,5 @@ def load_data(T=48, nb_flow=2, len_closeness=None, len_period=None, len_trend=No
     for _X in X_test:
         print(_X.shape, )
     print()
+    print(metadata_dim)
     return X_train, Y_train, X_test, Y_test, mmn, metadata_dim, timestamp_train, timestamp_test

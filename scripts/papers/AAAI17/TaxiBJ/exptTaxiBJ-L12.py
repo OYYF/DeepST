@@ -4,7 +4,8 @@
 """
 from __future__ import print_function
 import os
-import cPickle as pickle
+#import cPickle as pickle
+import pickle
 import time
 import numpy as np
 import h5py
@@ -20,10 +21,10 @@ np.random.seed(1337)  # for reproducibility
 
 # parameters
 DATAPATH = Config().DATAPATH  # data path, you may set your own data path with a global envirmental variable DATAPATH
-CACHEDATA = True  # cache data or NOT
+CACHEDATA = False  # cache data or NOT
 path_cache = os.path.join(DATAPATH, 'CACHE')  # cache path
-nb_epoch = 500  # number of epoch at training stage
-nb_epoch_cont = 100  # number of epoch at training (cont) stage
+nb_epoch = 1  # number of epoch at training stage
+nb_epoch_cont = 1  # number of epoch at training (cont) stage
 batch_size = 32  # batch size
 T = 48  # number of time intervals at a day
 lr = 0.0002  # learning rate
@@ -74,7 +75,7 @@ def read_cache(fname):
     f = h5py.File(fname, 'r')
     num = int(f['num'].value)
     X_train, Y_train, X_test, Y_test = [], [], [], []
-    for i in xrange(num):
+    for i in range(num):
         X_train.append(f['X_train_%i' % i].value)
         X_test.append(f['X_test_%i' % i].value)
     Y_train = f['Y_train'].value
@@ -118,7 +119,7 @@ def main():
     else:
         X_train, Y_train, X_test, Y_test, mmn, external_dim, timestamp_train, timestamp_test = TaxiBJ.load_data(
             T=T, nb_flow=nb_flow, len_closeness=len_closeness, len_period=len_period, len_trend=len_trend, len_test=len_test,
-            preprocess_name='preprocessing.pkl', meta_data=False, meteorol_data=False, holiday_data=False)
+            preprocess_name='preprocessing.pkl', meta_data=True, meteorol_data=True, holiday_data=True)
         if CACHEDATA:
             cache(fname, X_train, Y_train, X_test, Y_test,
                   external_dim, timestamp_train, timestamp_test)
@@ -132,6 +133,7 @@ def main():
         "**at the first time, it takes a few minites to compile if you use [Theano] as the backend**")
 
     ts = time.time()
+    print('external_dim: ', external_dim)
     model = build_model(external_dim)
     hyperparams_name = 'c{}.p{}.t{}.resunit{}.lr{}.noExternal'.format(
         len_closeness, len_period, len_trend, nb_residual_unit, lr)
@@ -146,6 +148,15 @@ def main():
 
     print('=' * 10)
     print("training model...")
+    print(len(X_train))
+    for i in range(len(X_train)):
+        print (len(X_train[i]))
+    print(len(Y_train))
+    #X_train = X_train[:,:1372]
+    #Y_train = Y_train[:1372]
+    for i in range(len(X_train)):
+        X_train[i] = X_train[i][:1372]
+    Y_train = Y_train[:1372]
     ts = time.time()
     history = model.fit(X_train, Y_train,
                         nb_epoch=nb_epoch,
