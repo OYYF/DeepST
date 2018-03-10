@@ -25,6 +25,13 @@ import pandas as pds
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
+
+
+TrendInterval = 0
+
+
+
+
 #from ..preprocessing import MinMaxNormalization, remove_incomplete_days, timestamp2vec
 
 class MinMaxNormalization(object):
@@ -68,9 +75,9 @@ nb_epoch_cont = 10  # number of epoch at training (cont) stage
 batch_size = 48  # batch size
 T = 48  # number of time intervals at a day
 lr = 0.0002  # learning rate
-len_closeness = 3  # length of closeness dependent sequence
-len_period = 1  # length of peroid dependent sequence
-len_trend = 1  # length of trend dependent sequence
+len_closeness = 1  # length of closeness dependent sequence
+len_period = 0  # length of peroid dependent sequence
+len_trend = 0  # length of trend dependent sequence
 nb_residual_unit = 12  # number of residual units
 external_dim = 7+48
 
@@ -82,7 +89,6 @@ len_test = T * days_test
 map_height, map_width = 64, 64  # grid size
 path_result = 'RET'
 path_model = 'MODEL'
-
 
 # if os.path.isdir(path_result) is False:
 #     os.mkdir(path_result)
@@ -114,15 +120,13 @@ def time2vec(len_all, startWeekday, start):
     print(np.asarray(ret).shape)
     return np.asarray(ret)
 
-
-
-def myGetData(len_closeness, len_period=1, len_trend=1, PeriodInterval=1, TrendInterval=7):
+def myGetData(len_closeness):
     mmnFlag = True
     X_train = []
     X_test = []
     Y_train = []
     Y_test = []
-    f_64=pds.read_csv('~/workplace/sigkdd/dataset/big_slide_spatial_feature.csv', header =None)
+    f_64=pds.read_csv('../../../../data/TaxiBJ/big_slide_spatial_feature.csv', header =None)
     array_64=f_64.values
     print ('array_64 shape: ', array_64.shape)
     print ('array_64 len: ', array_64)
@@ -140,8 +144,6 @@ def myGetData(len_closeness, len_period=1, len_trend=1, PeriodInterval=1, TrendI
                 _XC.append(np.reshape(data_all_mmn[i-j],(2,64,64))[0])
                 _XC.append(np.reshape(data_all_mmn[i-j],(2,64,64))[1])
             XC.append(_XC)
-            XP.append(np.reshape(data_all_mmn[i-PeriodInterval*T],(2,64,64)))
-            XT.append(np.reshape(data_all_mmn[i-TrendInterval*T],(2,64,64)))
             Y.append(np.reshape(data_all_mmn[i+1],(2,64,64)))
     else:
         for i in range(TrendInterval*T, len(array_64)-1):
@@ -150,22 +152,18 @@ def myGetData(len_closeness, len_period=1, len_trend=1, PeriodInterval=1, TrendI
                 _XC.append(np.reshape(array_64[i-j],(2,64,64))[0])
                 _XC.append(np.reshape(array_64[i-j],(2,64,64))[1])
             XC.append(_XC)
-            XP.append(np.reshape(array_64[i-PeriodInterval*T],(2,64,64)))
-            XT.append(np.reshape(array_64[i-TrendInterval*T],(2,64,64)))
             Y.append(np.reshape(array_64[i+1],(2,64,64)))
     XC = np.asarray(XC)
-    XP = np.asarray(XP)
-    XT = np.asarray(XT)
     Y = np.asarray(Y)
         
-    XC_train, XP_train, XT_train, Y_train = XC[
-        :-len_test], XP[:-len_test], XT[:-len_test], Y[:-len_test]
-    XC_test, XP_test, XT_test, Y_test = XC[
-        -len_test:], XP[-len_test:], XT[-len_test:], Y[-len_test:]
-    for l, X_ in zip([len_closeness, len_period, len_trend], [XC_train, XP_train, XT_train]):
+    XC_train, Y_train = XC[
+        :-len_test], Y[:-len_test]
+    XC_test, Y_test = XC[
+        -len_test:], Y[-len_test:]
+    for l, X_ in zip([len_closeness], [XC_train]):
         if l > 0:
             X_train.append(X_)
-    for l, X_ in zip([len_closeness, len_period, len_trend], [XC_test, XP_test, XT_test]):
+    for l, X_ in zip([len_closeness], [XC_test]):
         if l > 0:
             X_test.append(X_)
     
@@ -181,6 +179,72 @@ def myGetData(len_closeness, len_period=1, len_trend=1, PeriodInterval=1, TrendI
           'test shape: ', XC_test.shape, Y_test.shape)
     print(type(X_train), type(Y_train), type(X_test), type(Y_test))
     return X_train, Y_train, X_test, Y_test, mmn
+
+# def myGetData(len_closeness, len_period=1, len_trend=1, PeriodInterval=1, TrendInterval=7):
+#     mmnFlag = True
+#     X_train = []
+#     X_test = []
+#     Y_train = []
+#     Y_test = []
+#     f_64=pds.read_csv('../../../../data/big_slide_spatial_feature.csv', header =None)
+#     array_64=f_64.values
+#     print ('array_64 shape: ', array_64.shape)
+#     print ('array_64 len: ', array_64)
+
+#     mmn = MinMaxNormalization()
+#     mmn.fit(array_64)
+#     data_all_mmn = [mmn.transform(d) for d in array_64]
+
+#     XC, XP, XT = [], [], []
+#     Y = []
+#     if mmnFlag:
+#         for i in range(TrendInterval*T, len(data_all_mmn)-1):
+#             _XC = []
+#             for j in range(len_closeness):
+#                 _XC.append(np.reshape(data_all_mmn[i-j],(2,64,64))[0])
+#                 _XC.append(np.reshape(data_all_mmn[i-j],(2,64,64))[1])
+#             XC.append(_XC)
+#             XP.append(np.reshape(data_all_mmn[i-PeriodInterval*T],(2,64,64)))
+#             XT.append(np.reshape(data_all_mmn[i-TrendInterval*T],(2,64,64)))
+#             Y.append(np.reshape(data_all_mmn[i+1],(2,64,64)))
+#     else:
+#         for i in range(TrendInterval*T, len(array_64)-1):
+#             _XC = []
+#             for j in range(len_closeness):
+#                 _XC.append(np.reshape(array_64[i-j],(2,64,64))[0])
+#                 _XC.append(np.reshape(array_64[i-j],(2,64,64))[1])
+#             XC.append(_XC)
+#             XP.append(np.reshape(array_64[i-PeriodInterval*T],(2,64,64)))
+#             XT.append(np.reshape(array_64[i-TrendInterval*T],(2,64,64)))
+#             Y.append(np.reshape(array_64[i+1],(2,64,64)))
+#     XC = np.asarray(XC)
+#     XP = np.asarray(XP)
+#     XT = np.asarray(XT)
+#     Y = np.asarray(Y)
+        
+#     XC_train, XP_train, XT_train, Y_train = XC[
+#         :-len_test], XP[:-len_test], XT[:-len_test], Y[:-len_test]
+#     XC_test, XP_test, XT_test, Y_test = XC[
+#         -len_test:], XP[-len_test:], XT[-len_test:], Y[-len_test:]
+#     for l, X_ in zip([len_closeness, len_period, len_trend], [XC_train, XP_train, XT_train]):
+#         if l > 0:
+#             X_train.append(X_)
+#     for l, X_ in zip([len_closeness, len_period, len_trend], [XC_test, XP_test, XT_test]):
+#         if l > 0:
+#             X_test.append(X_)
+    
+#     print('train shape:', XC_train.shape, Y_train.shape,
+#           'test shape: ', XC_test.shape, Y_test.shape)
+#     print(type(X_train), type(Y_train), type(X_test), type(Y_test))
+#     timeVec = time2vec(len_all=len(array_64)-1, startWeekday=5, start=TrendInterval*T)
+#     timeVec_train = timeVec[:-len_test]
+#     timeVec_test = timeVec[-len_test:]
+#     X_train.append(timeVec_train)
+#     X_test.append(timeVec_test)
+#     print('train shape:', XC_train.shape, Y_train.shape,
+#           'test shape: ', XC_test.shape, Y_test.shape)
+#     print(type(X_train), type(Y_train), type(X_test), type(Y_test))
+#     return X_train, Y_train, X_test, Y_test, mmn
 
 
 def build_model(external_dim):
@@ -199,7 +263,7 @@ def build_model(external_dim):
     print(t_conf)
     print('external_dim: ', external_dim)
     print('nb_residual_unit: ', nb_residual_unit)
-    model = stresnet(c_conf=c_conf, p_conf=p_conf, t_conf=t_conf,
+    model = stresnet(c_conf=c_conf, p_conf=None, t_conf=None,
                      external_dim=external_dim, nb_residual_unit=nb_residual_unit)
     adam = Adam(lr=lr)
     model.compile(loss='mse', optimizer=adam, metrics=[metrics.rmse])

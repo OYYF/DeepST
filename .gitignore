@@ -1,4 +1,5 @@
 # data/model/results/scripts/backup
+*.csv
 *.sh
 *.bat
 *.h5
