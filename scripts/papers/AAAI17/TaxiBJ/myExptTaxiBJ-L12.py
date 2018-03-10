@@ -63,8 +63,8 @@ np.random.seed(1337)  # for reproducibility
 DATAPATH = Config().DATAPATH  # data path, you may set your own data path with a global envirmental variable DATAPATH
 CACHEDATA = False  # cache data or NOT
 path_cache = os.path.join(DATAPATH, 'CACHE')  # cache path
-nb_epoch = 1  # number of epoch at training stage
-nb_epoch_cont = 1  # number of epoch at training (cont) stage
+nb_epoch = 10  # number of epoch at training stage
+nb_epoch_cont = 10  # number of epoch at training (cont) stage
 batch_size = 48  # batch size
 T = 48  # number of time intervals at a day
 lr = 0.0002  # learning rate

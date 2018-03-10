@@ -3,6 +3,7 @@
 '''
 
 from __future__ import print_function
+from .iLayer import iLayer
 from keras.layers import (
     Input,
     Activation,
@@ -61,26 +62,33 @@ def stresnet(c_conf=(3, 2, 32, 32), p_conf=(3, 2, 32, 32), t_conf=(3, 2, 32, 32)
     outputs = []
     for conf in [c_conf, p_conf, t_conf]:
         if conf is not None:
+            print("conf in 166.111.69.2:",conf)
+
             len_seq, nb_flow, map_height, map_width = conf
+            print('nb_flow * len_seq: ', nb_flow * len_seq)
             input = Input(shape=(nb_flow * len_seq, map_height, map_width))
             main_inputs.append(input)
+            print('input.shape: ', iLayer()(input).shape)
             # Conv1
             conv1 = Convolution2D(
                 nb_filter=64, nb_row=3, nb_col=3, border_mode="same")(input)
+            print('conv1.shape: ', iLayer()(conv1).shape)
             # [nb_residual_unit] Residual Units
             residual_output = ResUnits(_residual_unit, nb_filter=64,
                               repetations=nb_residual_unit)(conv1)
+            print('residual_output.shape: ', iLayer()(residual_output).shape)
             # Conv2
             activation = Activation('relu')(residual_output)
+            print('activation.shape: ', iLayer()(activation).shape)
             conv2 = Convolution2D(
                 nb_filter=nb_flow, nb_row=3, nb_col=3, border_mode="same")(activation)
             outputs.append(conv2)
+            print('conv2.shape', iLayer()(conv2).shape)
 
     # parameter-matrix-based fusion
     if len(outputs) == 1:
         main_output = outputs[0]
     else:
-        from .iLayer import iLayer
         new_outputs = []
         for output in outputs:
             new_outputs.append(iLayer()(output))
